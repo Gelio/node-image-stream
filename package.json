@@ -1,0 +1,16 @@
+{
+  "name": "basic-socket",
+  "version": "1.0.0",
+  "description": "Basic node socket",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Grzegorz Rozdzialik",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.13.3",
+    "socket.io": "^1.4.4",
+    "socket.io-client": "^1.4.4"
+  }
+}
