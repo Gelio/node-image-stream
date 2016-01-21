@@ -1,11 +1,22 @@
+var config = {
+    sendImageInterval: 250,
+    imagesDirectory: "images"
+};
+
 var express = require('express'),
     app = express(),
     http = require('http').Server(app),
     io = require('socket.io')(http),
-    fs = require('fs');
+    fs = require('fs'),
+    fetchImages = require('./fetchFiles.js');
+
+var sockets = [],
+    interval,
+    images = [];
 
 io.on('connection', function(socket) {
     console.log('new connection');
+    sockets.push(socket);
 
     socket.on('fetch-image', function() {
         console.log('sending image');
@@ -20,10 +31,53 @@ io.on('connection', function(socket) {
 
     socket.on('disconnect', function() {
         console.log('disconnected');
-    })
+        sockets.filter(function(currSocket) {
+            return socket !== currSocket;
+        });
+    });
 });
 
+fetchImages(config.imagesDirectory).then(function (files) {
+    images = files;
+    http.listen(3000, function(err) {
+        if(err)
+            return console.error("Cannot start server");
 
-http.listen(3000, function() {
-    console.log('Listening on port 3000');
+        console.log('Listening on port 3000');
+
+        // Read directory
+        var sendingFactory = sendImageFactory();
+        interval = setInterval(sendingFactory, config.sendImageInterval);
+    });
+
+}, function (error) {
+    console.error("Cannot start the server", error);
 });
+
+function sendImageFactory() {
+    var i = 0;
+
+    return function() {
+        fs.readFile(__dirname + '/' + config.imagesDirectory + '/' + images[i], function(err, data) {
+            if(err) {
+                console.error("Cannot read file: ", config.imagesDirectory + '/' + images[i]);
+                return;
+            }
+
+            var fileType = images[i].split('.').pop();
+            var toSend = 'data:image/' + fileType + ';base64,' + data.toString('base64');
+
+            console.log("Sencing image ", config.imagesDirectory + '/' + images[i]);
+
+            sockets.forEach(function(socket) {
+                socket.emit('image', toSend);
+                console.log('sent');
+            });
+
+            i++;
+
+            if(i == images.length)
+                i = 0;
+        });
+    };
+}
