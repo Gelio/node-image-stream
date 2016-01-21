@@ -1,7 +1,11 @@
 var config = {
     sendImageInterval: 250,
-    imagesDirectory: "images"
+    imagesDirectory: 'images',
+    port: 3000
 };
+
+if(process.argv[2] && process.argv[2] === 'prod')
+    config.port = process.env.PORT;
 
 var express = require('express'),
     app = express(),
@@ -39,9 +43,9 @@ io.on('connection', function(socket) {
 
 fetchImages(config.imagesDirectory).then(function (files) {
     images = files;
-    http.listen(3000, function(err) {
+    http.listen(config.port, function(err) {
         if(err)
-            return console.error("Cannot start server");
+            return console.error('Cannot start server');
 
         console.log('Listening on port 3000');
 
@@ -51,23 +55,26 @@ fetchImages(config.imagesDirectory).then(function (files) {
     });
 
 }, function (error) {
-    console.error("Cannot start the server", error);
+    console.error('Cannot start the server', error);
 });
 
 function sendImageFactory() {
     var i = 0;
 
     return function() {
+        if(sockets.length == 0)
+            return;
+
         fs.readFile(__dirname + '/' + config.imagesDirectory + '/' + images[i], function(err, data) {
             if(err) {
-                console.error("Cannot read file: ", config.imagesDirectory + '/' + images[i]);
+                console.error('Cannot read file: ', config.imagesDirectory + '/' + images[i]);
                 return;
             }
 
             var fileType = images[i].split('.').pop();
             var toSend = 'data:image/' + fileType + ';base64,' + data.toString('base64');
 
-            console.log("Sencing image ", config.imagesDirectory + '/' + images[i]);
+            console.log('Sending image ', config.imagesDirectory + '/' + images[i]);
 
             sockets.forEach(function(socket) {
                 socket.emit('image', toSend);
