@@ -1,7 +1,7 @@
 window.addEventListener('load', function() {
     "use strict";
 
-    var socket = io('http://localhost:3000'),
+    var socket = io('http://basic-socket-stream.herokuapp.com:80'),
         button = document.querySelector('.fetch-image'),
         image = document.querySelector('.image');
 
