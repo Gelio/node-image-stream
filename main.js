@@ -18,6 +18,10 @@ var sockets = [],
     interval,
     images = [];
 
+app.get('/*', function(req, res) {
+    res.sendFile(__dirname + req.url);
+});
+
 io.on('connection', function(socket) {
     console.log('new connection');
     sockets.push(socket);
